@@ -2,7 +2,7 @@
 namespace SRNG{
 __m256i intr_mul_64(__m256i x, __m256i y){
 
-    __m256i t={},t_={},t__={};
+    __m256i t,t_,t__;
 
     t=_mm256_mul_epu32(x,y);
 
@@ -37,7 +37,7 @@ __m128i SSE2_intr_mul_64(__m128i x,__m128i y){
     t_=_mm_slli_epi64(_mm_add_epi64(t_,t__),32);
     return _mm_add_epi64(t,t_);
 }
-__m128 SSE2_intr_squares(__m128i ctr, __m128i key){
+__m128i SSE2_intr_squares(__m128i ctr, __m128i key){
     __m128i x,y,z;
     x=y=SSE2_intr_mul_64(ctr,key);
     z=_mm_add_epi64(y,key);
@@ -52,4 +52,21 @@ __m128 SSE2_intr_squares(__m128i ctr, __m128i key){
 
     return _mm_srli_epi64(x,32);
 }
+#if defined(__AVX512F__)
+__m512i  AVX512_intr_squares(__m512i ctr, __m512i key){
+    __m512i x,y,z;
+    x=y=_mm512_mullox_epi64(ctr,key);
+    z=_mm512_add_epi64(y,key);
+    x=_mm512_mullox_epi64(x,x);
+    x=_mm512_add_epi64(y,x);
+    x=_mm512_shuffle_epi32(x,0b10110001);
+    x=_mm512_mullox_epi64(x,x);
+    x=_mm512_add_epi64(z,x);
+    x=_mm512_shuffle_epi32(x,0b10110001);
+    x=_mm512_mullox_epi64(x,x);
+    x=_mm512_add_epi64(y,x);
+
+    return _mm512_srli_epi64(x,32);
+}
+#endif
 }
